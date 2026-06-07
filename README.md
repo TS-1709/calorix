@@ -29,6 +29,21 @@
 
 ---
 
+## Designed for AI coding agents
+
+Calorix is intentionally architected to be **readable, testable, and extensible by AI coding agents** (GitHub Copilot, Codex, Cursor, Claude Code):
+
+- **Small, single-purpose modules** — every file < 200 lines, clear exports
+- **Deterministic logic** — no randomness, no LLM, same input → same output
+- **Architecture docs** — `docs/ARCHITECTURE.md`, `docs/vision-architecture.md` with Mermaid diagrams
+- **Full test coverage** — Vitest + standalone Node smoke tests, `npm test` passes in <1s
+- **Zero hidden state** — localStorage only, no global singleton mess
+- **No external services** — works offline, no API keys, no cloud deps to mock
+
+If you point an agent at this repo, it can understand, modify, and extend the codebase without hallucinating.
+
+---
+
 ## Why this exists
 
 Most nutrition apps want your account, your weight trends, your training calendar, and a subscription. They also call home on every interaction, and their coaching is generic motivation copy written by an LLM.
