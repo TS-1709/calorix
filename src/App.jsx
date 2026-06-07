@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Atom, Lock, Settings, X, Save, Info, Sparkles, Calendar, Keyboard } from 'lucide-react';
+import { Atom, Lock, Settings, X, Save, Info, Sparkles, Calendar, Keyboard, Camera } from 'lucide-react';
 import { MealLogger } from './components/MealLogger.jsx';
+import { PhotoLogger } from './components/PhotoLogger.jsx';
 import { MacroRing } from './components/MacroRing.jsx';
 import { CoachCard } from './components/CoachCard.jsx';
 import { StreakCalendar } from './components/StreakCalendar.jsx';
@@ -9,6 +10,7 @@ import { SpecimenCard } from './components/SpecimenCard.jsx';
 import { generateCoachMessage, macroBadge } from './coach/engine.js';
 import { sumMacros, defaultTargetKcal } from './nutrition/estimator.js';
 import { listDayKeys, loadDay, saveDay, todayKey, streakFromKeys, readJSON, writeString, writeJSON } from './engine/storage.js';
+import { foodDb } from './nutrition/foodDb.js';
 
 const DEFAULT_TARGET_KEY = 'target';
 
@@ -88,15 +90,27 @@ export default function App() {
           <MacroRing {...badge} target={target} size={240} />
         </header>
 
+        <PhotoLogger
+          db={foodDb}
+          onPickFood={(entry) => handleAdd({
+            ...entry,
+            id: cryptoId(),
+            macros: scaleMacros(entry.food, entry.grams),
+          })}
+        />
+
         <CoachCard coach={coach} mood={mood} onChangeMood={handleChangeMood} />
+
+        <MealLogger day={day} onAdd={handleAdd} onRemove={handleRemove} />
 
         {day.entries?.length === 0 && (
           <section className="onboarding panel" aria-label="Schnellstart">
             <Sparkles size={16} />
             <div>
               <h2>Erste Mahlzeit in 10 Sekunden</h2>
-              <p>Suche nach <code>Hähnchen</code>, <code>Reis</code>, <code>Apfel</code>, <code>Ei</code> oder einem beliebigen anderen Lebensmittel. Beschreibe die Portion in eigenen Worten: <em>150g</em>, <em>eine Hand voll</em>, <em>⅓ Teller</em>. Calorix rechnet lokal.</p>
+              <p>Foto hochladen, nach <code>Hähnchen</code>, <code>Reis</code>, <code>Apfel</code>, <code>Ei</code> suchen oder ein beliebiges anderes Lebensmittel. Beschreibe die Portion in eigenen Worten: <em>150g</em>, <em>eine Hand voll</em>, <em>⅓ Teller</em>. Calorix rechnet lokal.</p>
               <div className="onboarding-tips">
+                <span><Camera size={12} /> Foto oben — Top-3 Kandidaten, automatisch ausgefüllt</span>
                 <span><Keyboard size={12} /> <kbd>Tab</kbd> zum Navigieren · <kbd>Enter</kbd> zum Hinzufügen</span>
                 <span><Calendar size={12} /> Macro-Ziel im <button type="button" className="link-inline" onClick={() => setShowSettings(true)}>Einstellungen</button> anpassen</span>
               </div>
@@ -231,6 +245,11 @@ function AboutBlock() {
           in deinem Browser. Export/Import kommt in einer späteren Version.
         </p>
         <p>
+          <strong>Foto-Erkennung on-device.</strong> Eine 5-stufige Vision-Pipeline (Color-Histogramm, Kanten, Teller, Spatial,
+          Scorer) analysiert dein Bild direkt im Browser — ohne Cloud, ohne Modell-Download, in {'<'}500&nbsp;ms. Siehe
+          <a href="https://github.com/TS-1709/calorix/blob/main/docs/vision-architecture.md">docs/vision-architecture.md</a>.
+        </p>
+        <p>
           <strong>Vier psychologische Frameworks</strong> im Coach: CBT, ACT, SDT, MI. Deterministisch, kein LLM-Call, keine
           Überraschungen. Der Coach ist kein Therapeut, nur ein Begleiter.
         </p>
@@ -242,4 +261,20 @@ function AboutBlock() {
       </div>
     </details>
   );
+}
+
+// Helpers used by the PhotoLogger → handleAdd bridge.
+function cryptoId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return 'id-' + Math.random().toString(36).slice(2, 11);
+}
+
+function scaleMacros(food, grams) {
+  const f = grams / 100;
+  return {
+    kcal: Math.round((food.kcal ?? 0) * f),
+    protein: +((food.protein ?? 0) * f).toFixed(2),
+    carb: +((food.carb ?? 0) * f).toFixed(2),
+    fat: +((food.fat ?? 0) * f).toFixed(2),
+  };
 }
