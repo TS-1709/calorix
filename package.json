@@ -1,23 +1,25 @@
 {
   "name": "calorix",
-  "private": true,
-  "version": "0.1.0",
+  "private": false,
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 5199",
-    "test": "vitest run"
+    "test": "vitest run src/**/*.test.js && node tests/vision-smoke.mjs",
+    "test:vision": "node tests/vision-smoke.mjs",
+    "test:e2e": "node tests/vision-e2e.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
+    "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "lucide-react": "latest"
+    "vite": "latest"
   },
   "devDependencies": {
-    "vitest": "latest",
-    "jsdom": "latest"
+    "jsdom": "latest",
+    "vitest": "latest"
   }
 }

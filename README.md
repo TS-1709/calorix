@@ -17,9 +17,9 @@
 
 <p align="center">
   <img alt="Build" src="https://img.shields.io/badge/build-passing-brightgreen">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-20%20passing-brightgreen">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-33%20passing-brightgreen">
   <img alt="Coverage" src="https://img.shields.io/badge/coverage-100%25%20modules-brightgreen">
-  <img alt="Bundle" src="https://img.shields.io/badge/bundle-74%20KB%20gzip-blue">
+  <img alt="Bundle" src="https://img.shields.io/badge/bundle-84%20KB%20gzip-blue">
   <img alt="Network" src="https://img.shields.io/badge/network-0%20calls-success">
   <img alt="A11y" src="https://img.shields.io/badge/a11y-WCAG%20AA-blueviolet">
   <img alt="PWA" src="https://img.shields.io/badge/PWA-installable-orange">
@@ -33,13 +33,14 @@
 
 Most nutrition apps want your account, your weight trends, your training calendar, and a subscription. They also call home on every interaction, and their coaching is generic motivation copy written by an LLM.
 
-Calorix does none of that. It's a small PWA that runs entirely in your browser. It estimates calories and macros from a bundled food database and a 30-year-old portion-size heuristic, then gives you a daily coach message grounded in one of four real psychological frameworks. The whole bundle is 74 KB gzipped, works offline after first load, makes zero network calls at runtime, and contains zero LLM-generated text.
+Calorix does none of that. It's a small PWA that runs entirely in your browser. It estimates calories and macros from a bundled food database, natural-language portions, and an on-device food-photo vision pipeline, then gives you a daily coach message grounded in one of four real psychological frameworks. The whole bundle is 84 KB gzipped, works offline after first load, makes zero network calls at runtime, and contains zero LLM-generated text.
 
 It exists to demonstrate that useful nutrition software can be honest, local, open-source, and psychology-aware without being clinical or preachy. The code is small enough to read in an evening.
 
 ## Features
 
 - **Search-first meal logging** — fuzzy match against 87 curated food items, with German umlaut and diacritic folding (`"hahnchen"` matches `"hähnchen"`)
+- **Photo-first meal logging** — snap or upload a meal photo; Calorix runs a 5-stage on-device vision pipeline and suggests top-3 food candidates with confidence + reasons
 - **Natural-language portions** — type `"150g"`, `"eine Hand voll"`, `"⅓ Teller"`, `"1 Becher"`; the parser does the rest
 - **Macro ring** — single SVG, four 90° arcs (kcal, protein, carbs, fat) with current/target/percent
 - **Coach with four frameworks** — daily message picked deterministically from CBT, ACT, SDT, or MI templates, with proper peer-reviewed citations rendered in the UI
@@ -99,8 +100,20 @@ src/
 ├── engine/                  # Infrastructure
 │   └── storage.js           # localStorage wrappers, day-keyed, quota-safe
 │
+├── vision/                  # Domain: on-device food-photo recognition
+│   ├── pipeline.js          # 5-stage pipeline orchestrator
+│   ├── preprocess.js        # 160x120 canvas downscale + image hash
+│   ├── colorHistogram.js    # HSV 6x3x3 features: warmth/greenness/redness
+│   ├── edges.js             # Sobel-lite edge density + direction
+│   ├── plateDetector.js     # radial ring scoring + grey-share fallback
+│   ├── spatial.js           # quadrant features + center/periphery saturation
+│   ├── scorer.js            # weighted food candidate ranking
+│   ├── dbBridge.js          # visual signatures for food categories
+│   └── foodMapping.js       # foodDb item → visionId/shape mapping
+│
 └── components/              # UI
     ├── MacroRing.jsx        # SVG ring, four 90° arcs
+    ├── PhotoLogger.jsx      # Photo upload/camera + vision candidates
     ├── MealLogger.jsx       # Search + portion + add entry
     ├── CoachCard.jsx        # Daily coach message + mood buttons
     ├── StreakCalendar.jsx   # 14-day consistency strip
@@ -158,11 +171,26 @@ const macros = estimateFromGrams(matches[0], 200);
 
 See [`docs/api.md`](./docs/api.md) for the full reference.
 
+## Food-photo vision
+
+Calorix v0.2.0 adds a fully local food-photo pipeline. It does **not** download a neural model and does **not** upload the image. Instead it extracts cheap visual features directly from a 160×120 canvas and scores them against declarative food signatures.
+
+Stages:
+
+1. **PreProcessor** — canvas downscale + stable image hash
+2. **ColorHistogram** — HSV 6×3×3 buckets + warmth/greenness/redness
+3. **EdgeDetector** — Sobel-lite texture density
+4. **PlateDetector** — radial ring scoring + grey-share fallback
+5. **SpatialAnalyzer** — quadrant and center/periphery features
+6. **Scorer** — weighted candidate ranking with human-readable reasons
+
+See [`docs/vision-architecture.md`](./docs/vision-architecture.md) for the Mermaid diagram, failure modes, and extension guide.
+
 ## Performance
 
 | Metric | Target | Actual |
 |---|---|---|
-| Initial JS (gzipped) | <100 KB | **74 KB** |
+| Initial JS (gzipped) | <100 KB | **84 KB** |
 | Initial CSS (gzipped) | <5 KB | **3 KB** |
 | Time to interactive (3G) | <3s | **~1.4s** |
 | Lighthouse Performance | >90 | (run on the live URL) |
@@ -195,19 +223,20 @@ If you find a security issue, email `security@schrdl.de` instead of opening a pu
 | Ad-supported | No | Yes | No | Yes |
 | Open source | **Yes (MIT)** | No | No | No |
 | Offline-capable | **Yes (full)** | Read-only | No | No |
-| Sub-100 KB gzipped | **Yes (74 KB)** | No | No | No |
+| Sub-100 KB gzipped | **Yes (84 KB)** | No | No | No |
 | Coach grounded in peer-reviewed psych | **Yes (4 frameworks)** | No | No | No |
 | Free | **Yes (forever)** | Freemium | Freemium | Freemium |
 
 ## Roadmap
 
 - [x] v0.1.0 — initial release
-- [ ] v0.2.0 — import/export as JSON, multi-device sync without a server (via WebDAV or file picker)
-- [ ] v0.3.0 — barcode scanner via `BarcodeDetector` API (no library, no network)
-- [ ] v0.4.0 — recipe builder: combine items into a "meal" with one portion, used multiple times
-- [ ] v0.5.0 — trend lines: 7d / 30d / 90d rolling averages, no over-engineering
-- [ ] v0.6.0 — localization: EN/DE switch, all strings factored
-- [ ] v0.7.0 — food DB contribution: a tiny form that emits a `foodDb-contrib.json` you can paste into a PR
+- [x] v0.2.0 — on-device food-photo recognition, PhotoLogger UI, vision architecture docs
+- [ ] v0.3.0 — import/export as JSON, multi-device sync without a server (via WebDAV or file picker)
+- [ ] v0.4.0 — barcode scanner via `BarcodeDetector` API (no library, no network)
+- [ ] v0.5.0 — recipe builder: combine items into a "meal" with one portion, used multiple times
+- [ ] v0.6.0 — trend lines: 7d / 30d / 90d rolling averages, no over-engineering
+- [ ] v0.7.0 — localization: EN/DE switch, all strings factored
+- [ ] v0.8.0 — food DB contribution: a tiny form that emits a `foodDb-contrib.json` you can paste into a PR
 - [ ] v1.0.0 — when 5+ contributors have shipped a feature each
 
 PRs welcome. See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
