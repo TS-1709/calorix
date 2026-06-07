@@ -12,6 +12,11 @@ import { sumMacros, defaultTargetKcal } from './nutrition/estimator.js';
 import { listDayKeys, loadDay, saveDay, todayKey, streakFromKeys, readJSON, writeString, writeJSON } from './engine/storage.js';
 import { foodDb } from './nutrition/foodDb.js';
 
+// v0.2.0 vision pipeline marker — ensures the new build is genuinely
+// different from v0.1.0 (forces a new content hash in the bundle).
+const BUILD_TAG = 'v0.2.0-vision';
+console.info('[Calorix]', BUILD_TAG);
+
 const DEFAULT_TARGET_KEY = 'target';
 
 function loadTarget() {
