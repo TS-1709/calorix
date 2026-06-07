@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Atom, Lock, Settings, X, Save, Info } from 'lucide-react';
+import { Atom, Lock, Settings, X, Save, Info, Sparkles, Calendar, Keyboard } from 'lucide-react';
 import { MealLogger } from './components/MealLogger.jsx';
 import { MacroRing } from './components/MacroRing.jsx';
 import { CoachCard } from './components/CoachCard.jsx';
 import { StreakCalendar } from './components/StreakCalendar.jsx';
 import { ReportCard } from './components/ReportCard.jsx';
+import { SpecimenCard } from './components/SpecimenCard.jsx';
 import { generateCoachMessage, macroBadge } from './coach/engine.js';
 import { sumMacros, defaultTargetKcal } from './nutrition/estimator.js';
 import { listDayKeys, loadDay, saveDay, todayKey, streakFromKeys, readJSON, writeString, writeJSON } from './engine/storage.js';
@@ -27,6 +28,7 @@ export default function App() {
   const [day, setDay] = useState(() => loadDay());
   const [target, setTarget] = useState(() => loadTarget());
   const [showSettings, setShowSettings] = useState(false);
+  const [showSpecimen, setShowSpecimen] = useState(false);
   const [mood, setMood] = useState(() => loadMood());
   const [dayKeys, setDayKeys] = useState(() => listDayKeys());
 
@@ -79,7 +81,7 @@ export default function App() {
             <p>Calorix rechnet lokal, der Coach hört zu. Kein Account, keine Cloud, keine Tracker-Skripte.</p>
             <div className="hero-stats">
               <span><strong>{totalMacros.kcal}</strong> kcal heute</span>
-              <span><strong>{streak}</strong> Tag{ein && streak !== 1 ? 'e' : ''} Konstanz</span>
+              <span><strong>{streak}</strong> {streak === 1 ? 'Tag' : 'Tage'} Konstanz</span>
               <span><strong>{day.entries?.length || 0}</strong> Einträge</span>
             </div>
           </div>
@@ -88,7 +90,33 @@ export default function App() {
 
         <CoachCard coach={coach} mood={mood} onChangeMood={handleChangeMood} />
 
+        {day.entries?.length === 0 && (
+          <section className="onboarding panel" aria-label="Schnellstart">
+            <Sparkles size={16} />
+            <div>
+              <h2>Erste Mahlzeit in 10 Sekunden</h2>
+              <p>Suche nach <code>Hähnchen</code>, <code>Reis</code>, <code>Apfel</code>, <code>Ei</code> oder einem beliebigen anderen Lebensmittel. Beschreibe die Portion in eigenen Worten: <em>150g</em>, <em>eine Hand voll</em>, <em>⅓ Teller</em>. Calorix rechnet lokal.</p>
+              <div className="onboarding-tips">
+                <span><Keyboard size={12} /> <kbd>Tab</kbd> zum Navigieren · <kbd>Enter</kbd> zum Hinzufügen</span>
+                <span><Calendar size={12} /> Macro-Ziel im <button type="button" className="link-inline" onClick={() => setShowSettings(true)}>Einstellungen</button> anpassen</span>
+              </div>
+            </div>
+          </section>
+        )}
+
         <MealLogger day={day} onAdd={handleAdd} onRemove={handleRemove} />
+
+        {day.entries?.length > 0 && (
+          <section className="day-close panel">
+            <div>
+              <h2>Tag abschließen</h2>
+              <p>Erzeuge eine teilbare Specimen-Karte für diesen Tag — als SVG, ohne Cloud.</p>
+            </div>
+            <button type="button" className="button primary" onClick={() => setShowSpecimen(true)}>
+              <Sparkles size={16} /> Specimen-Karte
+            </button>
+          </section>
+        )}
 
         <StreakCalendar dayKeys={dayKeys} />
 
@@ -107,6 +135,18 @@ export default function App() {
           target={target}
           onSave={handleSaveTarget}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showSpecimen && (
+        <SpecimenCard
+          day={day}
+          macros={totalMacros}
+          target={target}
+          streak={streak}
+          dayKey={todayKey()}
+          coach={coach}
+          onClose={() => setShowSpecimen(false)}
         />
       )}
     </main>

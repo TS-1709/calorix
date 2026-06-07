@@ -159,6 +159,24 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .about p { color: var(--muted); line-height: 1.55; margin: 0 0 10px; }
 .about strong { color: var(--text); }
 
+.onboarding { display: grid; grid-template-columns: 32px 1fr; gap: 16px; align-items: start; padding: 20px; }
+.onboarding > svg { color: var(--hot); margin-top: 4px; }
+.onboarding h2 { margin: 0 0 6px; font-size: 16px; }
+.onboarding p { margin: 0 0 10px; color: var(--muted); line-height: 1.5; font-size: 13px; }
+.onboarding code, .onboarding em { background: rgba(124,246,200,.08); padding: 1px 6px; border-radius: 4px; font-style: normal; font-family: var(--mono); font-size: 12px; color: var(--text); }
+.onboarding em { background: rgba(93,169,255,.10); color: var(--blue); }
+.onboarding-tips { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.onboarding-tips span { display: inline-flex; align-items: center; gap: 6px; }
+kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); }
+.link-inline { background: transparent; border: none; color: var(--hot); font: inherit; cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 2px; }
+
+.day-close { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.day-close div { flex: 1; min-width: 240px; }
+.day-close h2 { margin: 0 0 4px; font-size: 16px; }
+.day-close p { margin: 0; color: var(--muted); font-size: 13px; }
+.day-close .button.primary { display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: var(--hot); color: #04060f; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
+.day-close .button.primary:hover { filter: brightness(1.05); }
+
 footer { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; padding: 20px 0; justify-content: center; }
 
 .modal-backdrop { position: fixed; inset: 0; background: rgba(2,1,4,.78); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }

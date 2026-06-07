@@ -42,7 +42,7 @@ export function StreakCalendar({ dayKeys = null }) {
         ))}
       </div>
       <div className="streak-meta">
-        <span><strong>{streak}</strong> Tag{ein && streak !== 1 ? 'e' : ''} in Folge</span>
+        <span><strong>{streak}</strong> {streak === 1 ? 'Tag' : 'Tage'} in Folge</span>
         <span><strong>{keys.length}</strong> erfasste Tage gesamt</span>
       </div>
     </section>

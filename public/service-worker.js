@@ -1,6 +1,7 @@
 // Calorix service worker: offline-first shell cache.
-// App + bundled food DB + chef cards work fully offline after first load.
-const CACHE = 'calorix-v1';
+// App + bundled food DB + coach templates work fully offline after first load.
+// Bump CACHE name to force refresh on deploy.
+const CACHE = 'calorix-v4';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.svg', '/icons/icon-512.svg'];
 
 self.addEventListener('install', (e) => {
